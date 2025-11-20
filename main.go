@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -64,47 +65,55 @@ func main() {
 
 	fileName := filepath.Base(filePathNoExt)
 	outputPath := path.Join(output)
-	file, err := os.OpenFile(outputPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
 
 	packageName := filepath.Base(filepath.Dir(outputPath))
 	if packageName == "." || packageName == string(filepath.Separator) {
 		packageName = "main"
 	}
 
-	fmt.Fprintf(file, "package %s\n", packageName)
-	transformObject(fileName, structTempl, mappedJSON, file, true)
-}
+	buffer := bytes.NewBuffer(nil)
+	envUsed := transformObject(fileName, structTempl, mappedJSON, buffer, true)
+	topLevel := fmt.Sprintln("package", packageName)
+	if envUsed {
+		topLevel += `import "os"` + "\n"
+	}
 
-func strValue(key string, anyValue any) any {
-	switch anyValue.(type) {
-	case map[string]any:
-		return key
-	case string:
-		return fmt.Sprintf(`"%s"`, anyValue)
-	default:
-		return anyValue
+	finalBuf := bytes.NewBuffer([]byte(topLevel))
+	buffer.WriteTo(finalBuf)
+	err = os.WriteFile(outputPath, finalBuf.Bytes(), 0644)
+	if err != nil {
+		panic(err)
 	}
 }
 
-func transformObject(name string, structTempl *template.Template, json map[string]any, wr io.Writer, recursive bool) {
+func transformObject(name string, structTempl *template.Template, json map[string]any, wr io.Writer, recursive bool) (envUsed bool) {
 	params := Params{Name: englishTitle.String(name), NameLower: name, Fields: nil}
 	for key, value := range json {
+		if strings.HasPrefix(key, "@") {
+			// str := value.(string)
+			// parseImports(key, str, wr)
+			continue
+		}
+
 		titleKey := englishTitle.String(key)
 		field := Field{
 			Key:   titleKey,
 			Type:  reflect.TypeOf(value).String(),
-			Value: strValue(key, value),
+			Value: value,
 		}
 
-		if v, isObject := value.(map[string]any); isObject {
+		switch v := value.(type) {
+		case map[string]any:
 			field.Type = field.Key
+			field.Value = key
 			if recursive {
-				transformObject(key, structTempl, v, wr, true)
+				if transformObject(key, structTempl, v, wr, true) {
+					envUsed = true
+				}
 			}
+		case string:
+			fmt.Println(key, value)
+			field.Value, envUsed = parseImports(v)
 		}
 
 		params.Fields = append(params.Fields, field)
@@ -114,4 +123,5 @@ func transformObject(name string, structTempl *template.Template, json map[strin
 	if err != nil {
 		panic(err)
 	}
+	return
 }
