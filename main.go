@@ -15,20 +15,30 @@ import (
 	"golang.org/x/text/language"
 )
 
-const STRUCT_TEMPLATE string = `type {{.Name}} struct {
+var englishTitle = cases.Title(language.English)
+
+const STRUCT_TEMPLATE string = `
+type {{.Name}} struct {
 {{range .Fields}}	{{.Key}} {{.Type}}
 {{end}}}
 
+var {{.NameLower}} = {{.Name}}{
+{{range .Fields}}	{{.Key}}: {{.Value}},
+{{end}}}
+
+func Get{{.Name}}() {{.Name}} { return {{.NameLower}} }
 `
 
 type Field struct {
-	Type string
-	Key  string
+	Type  string
+	Key   string
+	Value any
 }
 
 type Params struct {
-	Name   string
-	Fields []Field
+	NameLower string
+	Name      string
+	Fields    []Field
 }
 
 func main() {
@@ -60,21 +70,40 @@ func main() {
 	}
 	defer file.Close()
 
-	fmt.Fprintf(file, "package %s\n\n", fileName)
-	structName := cases.Title(language.English).String(fileName)
-	transformObject(structName, structTempl, mappedJSON, file, true)
+	packageName := filepath.Base(filepath.Dir(outputPath))
+	if packageName == "." || packageName == string(filepath.Separator) {
+		packageName = "main"
+	}
+
+	fmt.Fprintf(file, "package %s\n", packageName)
+	transformObject(fileName, structTempl, mappedJSON, file, true)
+}
+
+func strValue(key string, anyValue any) any {
+	switch anyValue.(type) {
+	case map[string]any:
+		return key
+	case string:
+		return fmt.Sprintf(`"%s"`, anyValue)
+	default:
+		return anyValue
+	}
 }
 
 func transformObject(name string, structTempl *template.Template, json map[string]any, wr io.Writer, recursive bool) {
-	params := Params{Name: name, Fields: nil}
-	for key, _type := range json {
-		titleKey := cases.Title(language.English).String(key)
-		field := Field{Key: titleKey, Type: reflect.TypeOf(_type).String()}
+	params := Params{Name: englishTitle.String(name), NameLower: name, Fields: nil}
+	for key, value := range json {
+		titleKey := englishTitle.String(key)
+		field := Field{
+			Key:   titleKey,
+			Type:  reflect.TypeOf(value).String(),
+			Value: strValue(key, value),
+		}
 
-		if v, isObject := _type.(map[string]any); isObject {
-			field.Type = titleKey
+		if v, isObject := value.(map[string]any); isObject {
+			field.Type = field.Key
 			if recursive {
-				transformObject(field.Type, structTempl, v, wr, true)
+				transformObject(key, structTempl, v, wr, true)
 			}
 		}
 
