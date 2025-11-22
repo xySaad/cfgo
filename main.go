@@ -112,7 +112,6 @@ func transformObject(name string, structTempl *template.Template, json map[strin
 				}
 			}
 		case string:
-			fmt.Println(key, value)
 			field.Value, envUsed = parseImports(v)
 		}
 
