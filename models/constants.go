@@ -1,10 +1,13 @@
 package models
 
 import (
+	"regexp"
+
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
+var PlaceHolderPattern = regexp.MustCompile(`\$\{([\w.]+)\}`)
 var EnglishTitle = cases.Title(language.English)
 
 const IMPORTS_TEMPLATE = `
