@@ -16,6 +16,16 @@ import (
 	{{end}}
 )`
 
+const ENV_LOADER_TEMPLATE = `
+func mustLoadEnv(path string) map[string]string {
+	env, err := godotenv.Read(path)
+	if err != nil {
+		panic(err)
+	}
+	return env
+}
+`
+
 const STRUCT_TEMPLATE string = `
 type {{.Name}} struct {
 {{range .Fields}}	{{.Key}} {{.Type}}

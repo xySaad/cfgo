@@ -57,11 +57,15 @@ func main() {
 
 	if len(p.ConfigImports()) > 0 {
 		//assume all are .env
-		finalBuf.WriteString("\nfunc init() {\nvar err error\n")
-		for _, file := range p.ConfigImports() {
-			fmt.Fprintf(finalBuf, "err = godotenv.Load(\"%s\");if err != nil {panic(err)}\n", file)
+
+		envLoader, err := template.New("envLoader").Parse(models.ENV_LOADER_TEMPLATE)
+		if err != nil {
+			panic(err)
 		}
-		finalBuf.WriteString("}\n")
+		envLoader.Execute(finalBuf, nil)
+		for name, file := range p.ConfigImports() {
+			fmt.Fprintf(finalBuf, `var env_%s = mustLoadEnv("%s")`, name, file)
+		}
 	}
 
 	buffer.WriteTo(finalBuf)

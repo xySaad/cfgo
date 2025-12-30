@@ -128,8 +128,7 @@ func (p Parser) parseImports(path string) string {
 		}
 		//assume it's env since it's the only type supported
 
-		p.imports["os"] = "os"
-		return fmt.Sprintf(`os.Getenv("%s")`, parts[1])
+		return fmt.Sprintf(`env_%s["%s"]`, parts[0], parts[1])
 	}
 	return fmt.Sprintf(`"%s"`, path)
 }
