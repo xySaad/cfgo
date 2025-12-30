@@ -15,12 +15,14 @@ import (
 type Parser struct {
 	imports       map[string]string
 	configImports map[string]string
+	template      *template.Template
 }
 
-func NewParser() Parser {
+func NewParser(template *template.Template) Parser {
 	return Parser{
 		imports:       make(map[string]string),
 		configImports: make(map[string]string),
+		template:      template,
 	}
 }
 func (p *Parser) ConfigImports() map[string]string {
@@ -49,7 +51,7 @@ func (p *Parser) ParseTopLevelImports(json map[string]any) {
 	}
 }
 
-func (p *Parser) ParseJSON(name string, structTempl *template.Template, json map[string]any, wr io.Writer, recursive bool) {
+func (p *Parser) ParseJSON(name string, json map[string]any, wr io.Writer) {
 	params := models.Params{Name: models.EnglishTitle.String(name), NameLower: name, Fields: nil}
 	for key, value := range json {
 		titleKey := models.EnglishTitle.String(key)
@@ -63,9 +65,7 @@ func (p *Parser) ParseJSON(name string, structTempl *template.Template, json map
 		case map[string]any:
 			field.Type = field.Key
 			field.Value = key
-			if recursive {
-				p.ParseJSON(key, structTempl, v, wr, true)
-			}
+			p.ParseJSON(key, v, wr)
 		case string:
 			field.Value = p.parseImports(v)
 		}
@@ -73,7 +73,7 @@ func (p *Parser) ParseJSON(name string, structTempl *template.Template, json map
 		params.Fields = append(params.Fields, field)
 	}
 
-	err := structTempl.Execute(wr, params)
+	err := p.template.Execute(wr, params)
 	if err != nil {
 		panic(err)
 	}

@@ -1,0 +1,20 @@
+{
+  "@ENV": ".env",
+  "address": "0.0.0.0:5051",
+  "domain": "https://learn.zone01oujda.ma",
+  "graphql": {
+    "login_api": "${domain}/api/auth/signin",
+    "username": "java",
+    "password": "@ENV.GRAPHQL_PASSWORD"
+  },
+  "gitea": {
+    "endpoint": "https://learn.zone01oujda.ma/git",
+    "user": "${gitea.endpoint}/api/v1/user",
+    "oauth": "${gitea.endpoint}/login/oauth/authorize",
+    "redirect_uri": "https://01auth.undo.it/api/auth/callback",
+    "client": {
+      "secret": "@ENV.GITEA_CLIENT_SECRET",
+      "id": "0deb28b4-d8bc-45a0-a6dc-564de08325ae"
+    }
+  }
+}
