@@ -58,7 +58,7 @@ func main() {
 	if len(p.ConfigImports()) > 0 {
 		//assume all are .env
 		finalBuf.WriteString("\nfunc init() {\nvar err error\n")
-		for file := range p.ConfigImports() {
+		for _, file := range p.ConfigImports() {
 			fmt.Fprintf(finalBuf, "err = godotenv.Load(\"%s\");if err != nil {panic(err)}\n", file)
 		}
 		finalBuf.WriteString("}\n")
