@@ -1,4 +1,4 @@
-//go:generate cfgo config/config.json config/config.go
+//go:generate cfgo
 package main
 
 import (
