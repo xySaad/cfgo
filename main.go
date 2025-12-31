@@ -14,9 +14,58 @@ import (
 )
 
 func main() {
-	input := os.Args[1]
-	output := os.Args[2]
+	switch len(os.Args) {
+	case 1: // default config folder 'config/'
+		ConvertDirectory("config")
+	case 2:
+		ConvertDirectory(os.Args[1])
+	case 3:
+		input := os.Args[1]
+		output := os.Args[2]
+		packageName := filepath.Base(filepath.Dir(output))
+		if packageName == "." || packageName == string(filepath.Separator) {
+			packageName = "main"
+		}
+		Cfgo(input, output, packageName)
+	}
 
+}
+
+func ConvertDirectory(dirName string) {
+	dir, err := os.ReadDir(dirName)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	generatedDir := dirName + "/generated"
+
+	err = os.MkdirAll(generatedDir, 0o755)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+
+	for _, entry := range dir {
+		if entry.IsDir() {
+			// TODO: support nested configs
+			continue
+		}
+		fileName := entry.Name()
+		inputExt := filepath.Ext(fileName)
+		if inputExt != ".json" {
+			continue
+		}
+
+		outputFile := fileName[:len(fileName)-len(inputExt)] + ".go"
+		output := filepath.Join(generatedDir, outputFile)
+		input := filepath.Join(dirName, fileName)
+
+		Cfgo(input, output, filepath.Base(dirName))
+	}
+
+}
+
+func Cfgo(input, output, packageName string) {
 	bfile, err := os.ReadFile(input)
 	if err != nil {
 		panic(err)
@@ -26,17 +75,13 @@ func main() {
 	mappedJSON := map[string]any{}
 	err = json.Unmarshal(bfile, &mappedJSON)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", input, err)
+		return
 	}
 
 	structTempl, err := template.New("struct").Parse(models.STRUCT_TEMPLATE)
 	if err != nil {
 		panic(err)
-	}
-
-	packageName := filepath.Base(filepath.Dir(output))
-	if packageName == "." || packageName == string(filepath.Separator) {
-		packageName = "main"
 	}
 
 	fileName := filepath.Base(filePathNoExt)

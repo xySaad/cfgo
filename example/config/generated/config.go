@@ -14,15 +14,15 @@ func mustLoadEnv(path string) map[string]string {
 }
 var env_ENV = mustLoadEnv(".env")
 type Graphql struct {
+	Login_api string
 	Username string
 	Password string
-	Login_api string
 }
 
 var graphql = Graphql{
+	Login_api: "https://learn.zone01oujda.ma/api/auth/signin",
 	Username: "java",
 	Password: env_ENV["GRAPHQL_PASSWORD"],
-	Login_api: "https://learn.zone01oujda.ma/api/auth/signin",
 }
 
 func GetGraphql() Graphql { return graphql }
@@ -40,35 +40,35 @@ var client = Client{
 func GetClient() Client { return client }
 
 type Gitea struct {
-	Endpoint string
 	User string
 	Oauth string
 	Redirect_uri string
 	Client Client
+	Endpoint string
 }
 
 var gitea = Gitea{
-	Endpoint: "https://learn.zone01oujda.ma/git",
 	User: "https://learn.zone01oujda.ma/git/api/v1/user",
 	Oauth: "https://learn.zone01oujda.ma/git/login/oauth/authorize",
 	Redirect_uri: "https://01auth.undo.it/api/auth/callback",
 	Client: client,
+	Endpoint: "https://learn.zone01oujda.ma/git",
 }
 
 func GetGitea() Gitea { return gitea }
 
 type Config struct {
-	Address string
 	Domain string
 	Graphql Graphql
 	Gitea Gitea
+	Address string
 }
 
 var config = Config{
-	Address: "0.0.0.0:5051",
 	Domain: "https://learn.zone01oujda.ma",
 	Graphql: graphql,
 	Gitea: gitea,
+	Address: "0.0.0.0:5051",
 }
 
 func GetConfig() Config { return config }
