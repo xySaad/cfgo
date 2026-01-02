@@ -8,7 +8,7 @@ import (
 )
 
 var PlaceHolderPattern = regexp.MustCompile(`\$\{([\w.]+)\}`)
-var EnglishTitle = cases.Title(language.English)
+var EnglishTitle = cases.Title(language.English, cases.NoLower)
 
 const IMPORTS_TEMPLATE = `
 import (

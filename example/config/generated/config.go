@@ -13,62 +13,78 @@ func mustLoadEnv(path string) map[string]string {
 	return env
 }
 var env_ENV = mustLoadEnv(".env")
+type GraphqlClient struct {
+	Secret string
+	Id string
+	State string
+}
+
+var graphqlClient = GraphqlClient{
+	Secret: env_ENV["GITEA_CLIENT_SECRET"],
+	Id: "0deb28b4-d8bc-45a0-a6dc-564de08325ae",
+	State: "STATE",
+}
+
+func GetGraphqlClient() GraphqlClient { return graphqlClient }
+
 type Graphql struct {
 	Login_api string
 	Username string
 	Password string
+	Client GraphqlClient
 }
 
 var graphql = Graphql{
 	Login_api: "https://learn.zone01oujda.ma/api/auth/signin",
 	Username: "java",
 	Password: env_ENV["GRAPHQL_PASSWORD"],
+	Client: graphqlClient,
 }
 
 func GetGraphql() Graphql { return graphql }
 
-type Client struct {
-	Secret string
+type GiteaClient struct {
 	Id string
+	Secret string
 }
 
-var client = Client{
-	Secret: env_ENV["GITEA_CLIENT_SECRET"],
+var giteaClient = GiteaClient{
 	Id: "0deb28b4-d8bc-45a0-a6dc-564de08325ae",
+	Secret: env_ENV["GITEA_CLIENT_SECRET"],
 }
 
-func GetClient() Client { return client }
+func GetGiteaClient() GiteaClient { return giteaClient }
 
 type Gitea struct {
+	Redirect_uri string
+	Client GiteaClient
+	Endpoint string
 	User string
 	Oauth string
-	Redirect_uri string
-	Client Client
-	Endpoint string
 }
 
 var gitea = Gitea{
+	Redirect_uri: "https://01auth.undo.it/api/auth/callback",
+	Client: giteaClient,
+	Endpoint: "https://learn.zone01oujda.ma/git",
 	User: "https://learn.zone01oujda.ma/git/api/v1/user",
 	Oauth: "https://learn.zone01oujda.ma/git/login/oauth/authorize",
-	Redirect_uri: "https://01auth.undo.it/api/auth/callback",
-	Client: client,
-	Endpoint: "https://learn.zone01oujda.ma/git",
 }
 
 func GetGitea() Gitea { return gitea }
 
 type Config struct {
+	Address string
 	Domain string
 	Graphql Graphql
 	Gitea Gitea
-	Address string
 }
 
 var config = Config{
+	Address: "0.0.0.0:5051",
 	Domain: "https://learn.zone01oujda.ma",
 	Graphql: graphql,
 	Gitea: gitea,
-	Address: "0.0.0.0:5051",
 }
 
 func GetConfig() Config { return config }

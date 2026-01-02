@@ -5,7 +5,12 @@
   "graphql": {
     "login_api": "${domain}/api/auth/signin",
     "username": "java",
-    "password": "@ENV.GRAPHQL_PASSWORD"
+    "password": "@ENV.GRAPHQL_PASSWORD",
+    "client": {
+      "secret": "@ENV.GITEA_CLIENT_SECRET",
+      "id": "0deb28b4-d8bc-45a0-a6dc-564de08325ae",
+      "state": "STATE"
+    }
   },
   "gitea": {
     "endpoint": "https://learn.zone01oujda.ma/git",

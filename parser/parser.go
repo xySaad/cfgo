@@ -29,7 +29,7 @@ func NewParser(root map[string]any, template *template.Template) Parser {
 }
 
 func (p *Parser) Parse(fileName string, wr io.Writer) {
-	p.ParseJSON(fileName, p.root, wr)
+	p.ParseJSON(true, fileName, p.root, wr)
 }
 
 func (p *Parser) ConfigImports() map[string]string {
@@ -79,7 +79,7 @@ func (p *Parser) resolveValue(val string) string {
 	return fmt.Sprintf(`%s`, result)
 }
 
-func (p *Parser) ParseJSON(name string, json map[string]any, wr io.Writer) {
+func (p *Parser) ParseJSON(isRoot bool, name string, json map[string]any, wr io.Writer) {
 	params := models.Params{Name: models.EnglishTitle.String(name), NameLower: name, Fields: nil}
 	for key, value := range json {
 		titleKey := models.EnglishTitle.String(key)
@@ -91,9 +91,16 @@ func (p *Parser) ParseJSON(name string, json map[string]any, wr io.Writer) {
 
 		switch v := value.(type) {
 		case map[string]any:
-			field.Type = field.Key
-			field.Value = key
-			p.ParseJSON(key, v, wr)
+			if isRoot {
+				field.Type = field.Key
+				field.Value = key
+				p.ParseJSON(false, key, v, wr)
+			} else {
+				field.Type = params.Name + titleKey
+				field.Value = name + titleKey
+				p.ParseJSON(false, name+titleKey, v, wr)
+			}
+
 		case string:
 			field.Value = p.parseImports(v)
 		}

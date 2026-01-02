@@ -1,10 +1,9 @@
-//go:generate cfgo
+//go:generate ../build/cfgo
 package main
 
 import (
+	config "example/config/generated"
 	"fmt"
-
-	"example/config"
 )
 
 func main() {
